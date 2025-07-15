@@ -8,45 +8,51 @@
 import SwiftUI
 
 struct ContentView: View {
-  @StateObject private var service = WeatherService()
-  @State private var station = "KSFO"
+  @Environment(\.managedObjectContext) private var viewContext
+
+  @StateObject var service: AviationDataService
+  @State private var station = "KMAN"
+
+  @FetchRequest(
+      sortDescriptors: [NSSortDescriptor(keyPath: \AirportEntity.id, ascending: true)],
+      animation: .default
+  )
+  private var airports: FetchedResults<AirportEntity>
   
   var body: some View {
     NavigationView {
       VStack {
-        TextField("Enter station (e.g. KSFO)", text: $station)
+        TextField("Enter station (e.g. KMAN)", text: $station)
           .textFieldStyle(RoundedBorderTextFieldStyle())
           .padding()
         
         Button("Fetch METAR") {
           Task {
-            await service.fetchMETARs(for: station)
+            await service.fetchAndStoreMetars(for: station)
           }
         }
+        .padding()
+        Button("DELETE ALL") {
+          PersistenceController.shared.deleteAllAirports(in: viewContext)
+        }
+        .padding()
         
-        List(service.metars, id: \.observationTime) { metar in
-          VStack(alignment: .leading) {
-            Text("Station: \(metar.stationID)")
-            Text("Time: \(metar.observationTime)")
-            Text("Temp: \(metar.temperature) ºC")
-            Text("Wind: \(metar.wind)º")
-            Text("Raw: \(metar.rawText)")
-          }
-        }
+        AirportListView(airports: airports)
+
       }
       .navigationTitle("Flight Info")
       .alert("Error", isPresented: Binding<Bool>(
-          get: { service.error != nil },
-          set: { if !$0 { service.error = nil } }
+        get: { service.error != nil },
+        set: { if !$0 { service.error = nil } }
       )) {
-          Button("OK", role: .cancel) { }
+        Button("OK", role: .cancel) { }
       } message: {
-          Text(service.error?.localizedDescription ?? "Unknown error")
+        Text(service.error?.localizedDescription ?? "Unknown error")
       }
     }
   }
 }
 
-#Preview {
-  ContentView()
-}
+//#Preview {
+//  ContentView()
+//}

@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct CaelumApp: App {
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-        }
+  let persistenceController = PersistenceController.shared
+  
+  var body: some Scene {
+    WindowGroup {
+      ContentView(service: AviationDataService(container: PersistenceController.shared.container))
+        .environment(\.managedObjectContext, persistenceController.container.viewContext)
     }
+  }
 }

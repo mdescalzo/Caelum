@@ -13,9 +13,10 @@ private struct PartialMetar {
   var wind: String = ""
   var rawText: String = ""
   
-  func metar() -> Metar {
+  func metar() -> Metar? {
+    guard let observationTimeDate = ISO8601DateFormatter().date(from: observationTime) else { return nil }
     return Metar(stationID: stationID,
-                 observationTime: observationTime,
+                 observationTime: observationTimeDate,
                  temperature: temperature,
                  wind: wind,
                  rawText: rawText)
@@ -32,14 +33,14 @@ final class MetarsParser: NSObject, XMLParserDelegate {
   
   func parse(data: Data) throws -> [Metar] {
     guard !data.isEmpty else {
-      throw WeatherServiceError.emptyResponse
+      throw AviationDataServiceError.emptyResponse
     }
     
     let parser = XMLParser(data: data)
     parser.delegate = self
     
     guard parser.parse() else {
-      throw WeatherServiceError.xmlParseFailure
+      throw AviationDataServiceError.xmlParseFailure
     }
     
     return metars
@@ -67,6 +68,7 @@ final class MetarsParser: NSObject, XMLParserDelegate {
     case "observation_time": currentMetar?.observationTime = trimmed
     case "temp_c": currentMetar?.temperature = trimmed
     case "raw_text": currentMetar?.rawText = trimmed
+    case "wind_dir_degrees": currentMetar?.wind = trimmed
     case "METAR":
       guard let metar = currentMetar?.metar() else { return }
       metars.append(metar)

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23788.4" systemVersion="24F74" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <entity name="AirportEntity" representedClassName="AirportEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="String"/>
+        <relationship name="metars" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MetarEntity" inverseName="airport" inverseEntity="MetarEntity"/>
+    </entity>
+    <entity name="MetarEntity" representedClassName="MetarEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="observationTime" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="rawText" optional="YES" attributeType="String"/>
+        <attribute name="temperature" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="wind" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <relationship name="airport" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AirportEntity" inverseName="metars" inverseEntity="AirportEntity"/>
+    </entity>
+</model>
