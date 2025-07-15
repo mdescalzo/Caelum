@@ -25,15 +25,17 @@ struct ContentView: View {
         TextField("Enter station (e.g. KMAN)", text: $station)
           .textFieldStyle(RoundedBorderTextFieldStyle())
           .padding()
-        
-        Button("Fetch METAR") {
+
+        FetchButton(action: {
           Task {
-            await service.fetchAndStoreMetars(for: station)
+            await service.fetchAndStoreMetars(for: station.uppercased())
           }
-        }
+        }, isLoading: $service.isFetching)
         .padding()
+        
         Button("DELETE ALL") {
           PersistenceController.shared.deleteAllAirports(in: viewContext)
+          PersistenceController.shared.deleteAllMetars(in: viewContext)
         }
         .padding()
         
@@ -50,6 +52,26 @@ struct ContentView: View {
         Text(service.error?.localizedDescription ?? "Unknown error")
       }
     }
+  }
+  
+  struct FetchButton: View {
+      let action: () -> Void
+      @Binding var isLoading: Bool
+
+      var body: some View {
+          Button(action: {
+              action()
+          }) {
+              HStack {
+                  if isLoading {
+                      ProgressView()
+                  }
+                  Text(isLoading ? "Fetching..." : "Fetch METAR")
+              }
+          }
+          .disabled(isLoading)
+          .padding()
+      }
   }
 }
 

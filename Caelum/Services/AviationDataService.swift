@@ -10,7 +10,9 @@ import CoreData
 
 final class AviationDataService: NSObject, ObservableObject {
   @MainActor @Published var error: Error?
-
+  
+  @MainActor @Published var isFetching: Bool = false
+  
   private let backgroundContext: NSManagedObjectContext
   private let parser = MetarsParser()
   
@@ -22,39 +24,40 @@ final class AviationDataService: NSObject, ObservableObject {
   
   @MainActor
   func fetchAndStoreMetars(for station: String) async {
+    isFetching = true
     let urlString = "https://aviationweather.gov/api/data/metar?ids=\(station)&format=xml&hours=1"
     guard let url = URL(string: urlString) else {
-      fatalError("Invalid METAR URL: \(urlString)")
+      error = AviationDataServiceError.invalidURL
+      return
     }
-
+    
     do {
       let (data, _) = try await URLSession.shared.data(from: url)
-      
+      print(data)
       let metars = try parser.parse(data: data)
-print(metars)
       try await backgroundContext.perform {
-        let airport = self.fetchOrCreateAirport(with: station, context: self.backgroundContext)
-        
-        let existingMetars: [Date: MetarEntity] = (airport.metars as? Set<MetarEntity> ?? [])
-          .reduce(into: [:]) { dict, metar in
-            if let time = metar.observationTime {
-              dict[time] = metar
-            }
-          }
         for data in metars {
-          let metar = existingMetars[data.observationTime] ?? MetarEntity(context: self.backgroundContext)
+          guard data.stationID.uppercased() == station.uppercased() else { continue }
+          let airport = self.fetchOrCreateAirport(with: data.stationID, context: self.backgroundContext)
+          airport.lastUpdated = Date()
+          
+          let metar = self.fetchOrCreateMetar(with: data.observationTime, context: self.backgroundContext)
           metar.rawText = data.rawText
           metar.temperature = Float(data.temperature) ?? 0
           metar.observationTime = data.observationTime
           metar.wind = Float(data.wind) ?? 0
           metar.airport = airport
         }
-        try self.backgroundContext.save()
+        if self.backgroundContext.hasChanges {
+          try self.backgroundContext.save()
+        } else {
+          throw AviationDataServiceError.noResultsFound(for: station)
+        }
       }
     } catch {
       self.error = error
-//      fatalError("Failed to fetch or save METARs for \(station): \(error)")
     }
+    isFetching = false
   }
   
   private func fetchOrCreateAirport(with id: String, context: NSManagedObjectContext) -> AirportEntity {
@@ -68,10 +71,22 @@ print(metars)
     return newAirport
   }
   
+  private func fetchOrCreateMetar(with observationTime: Date, context: NSManagedObjectContext) -> MetarEntity {
+    let request: NSFetchRequest<MetarEntity> = MetarEntity.fetchRequest()
+    request.predicate = NSPredicate(format: "observationTime == %@", observationTime as CVarArg)
+    if let existing = try? context.fetch(request).first {
+      return existing
+    }
+    let newMetar = MetarEntity(context: context)
+    newMetar.observationTime = observationTime
+    return newMetar
+  }
+  
 }
 
 // MARK: - Error handling
 enum AviationDataServiceError: Error, LocalizedError {
+  case noResultsFound(for: String)
   case invalidURL
   case networkFailure(Error)
   case xmlParseFailure
@@ -79,6 +94,8 @@ enum AviationDataServiceError: Error, LocalizedError {
   
   var errorDescription: String? {
     switch self {
+    case .noResultsFound(let input):
+      return "No results found for \(input)"
     case .invalidURL:
       return "Internal error: malformed URL."
     case .networkFailure(let err):

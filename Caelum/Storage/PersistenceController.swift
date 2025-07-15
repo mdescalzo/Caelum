@@ -36,18 +36,30 @@ final class PersistenceController {
   
   func deleteAllAirports(in context: NSManagedObjectContext) {
     let fetchRequest: NSFetchRequest<NSFetchRequestResult> = AirportEntity.fetchRequest()
-
+    
     do {
       if let airports = try context.fetch(fetchRequest) as? [AirportEntity] {
-        
+        print("Deleting \(airports.count) airports.")
         airports.forEach { context.delete($0) }
-        
         try context.save()
       }
     } catch {
       print("❌ Failed to delete all airports: \(error)")
     }
   }
-
   
+  func deleteAllMetars(in context: NSManagedObjectContext) {
+    let fetchRequest: NSFetchRequest<NSFetchRequestResult> = MetarEntity.fetchRequest()
+    
+    do {
+      if let metars = try context.fetch(fetchRequest) as? [MetarEntity] {
+        print("Deleting \(metars.count) metars.")
+        metars.forEach { context.delete($0) }
+        try context.save()
+      }
+    } catch {
+      print("❌ Failed to delete all metars: \(error)")
+    }
+  }
+   
 }

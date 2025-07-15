@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct AirportListView: View {
-//  @ObservedObject var store: LocalCoreDataStore
-  
+ 
   let airports: FetchedResults<AirportEntity>
   
   @State private var expandedAirports: Set<String> = []
@@ -20,7 +19,7 @@ struct AirportListView: View {
       ForEach(airports, id: \.id) { airport in
         Section {
           AirportDisclosureView(
-            airport: airport,
+            airport: AirportViewModel(from: airport),
             isExpanded: expandedAirports.contains(airport.id ?? "")) { expanded in
               guard let id = airport.id else { return }
               if expanded {
