@@ -10,9 +10,13 @@ import SwiftUI
 struct ContentView: View {
   @Environment(\.managedObjectContext) private var viewContext
 
-  @StateObject var service: AviationDataService
-  @State private var station = "KMAN"
+  let service: AviationDataService
 
+  @State private var station = "KMAN"
+  @State private var isFetching: Bool = false
+  @State private var isDeleting: Bool = false
+  @State private var errors: [Error] = []
+  
   @FetchRequest(
       sortDescriptors: [NSSortDescriptor(keyPath: \AirportEntity.id, ascending: true)],
       animation: .default
@@ -27,16 +31,14 @@ struct ContentView: View {
           .padding()
 
         FetchButton(action: {
-          Task {
-            await service.fetchAndStoreMetars(for: station.uppercased())
-          }
-        }, isLoading: $service.isFetching)
+          performFetch(for: station)
+        }, isLoading: $isFetching)
         .padding()
         
         Button("DELETE ALL") {
-          PersistenceController.shared.deleteAllAirports(in: viewContext)
-          PersistenceController.shared.deleteAllMetars(in: viewContext)
+          performDelete()
         }
+        .disabled(isDeleting)
         .padding()
         
         AirportListView(airports: airports)
@@ -44,13 +46,38 @@ struct ContentView: View {
       }
       .navigationTitle("Flight Info")
       .alert("Error", isPresented: Binding<Bool>(
-        get: { service.error != nil },
-        set: { if !$0 { service.error = nil } }
+        get: { errors.count > 0 },
+        set: { if !$0, !errors.isEmpty { errors.removeFirst() } }
       )) {
         Button("OK", role: .cancel) { }
       } message: {
-        Text(service.error?.localizedDescription ?? "Unknown error")
+        Text(errors.first?.localizedDescription ?? "Unknown error")
       }
+    }
+  }
+  
+  func performFetch(for station: String) {
+    Task {
+      isFetching = true
+      do {
+        try await service.fetchAndStoreMetars(for: station.uppercased())
+      } catch {
+        errors.append(error)
+      }
+      isFetching = false
+    }
+  }
+  
+  func performDelete() {
+    Task {
+      isDeleting = true
+      do {
+        try await PersistenceController.shared.deleteAllAirports(in: viewContext)
+        try await PersistenceController.shared.deleteAllMetars(in: viewContext)
+      } catch {
+        errors.append(error)
+      }
+      isDeleting = false
     }
   }
   

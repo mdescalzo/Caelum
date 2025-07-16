@@ -8,11 +8,7 @@
 import Foundation
 import CoreData
 
-final class AviationDataService: NSObject, ObservableObject {
-  @MainActor @Published var error: Error?
-  
-  @MainActor @Published var isFetching: Bool = false
-  
+final class AviationDataService: NSObject {
   private let backgroundContext: NSManagedObjectContext
   private let parser = MetarsParser()
   
@@ -23,41 +19,34 @@ final class AviationDataService: NSObject, ObservableObject {
   }
   
   @MainActor
-  func fetchAndStoreMetars(for station: String) async {
-    isFetching = true
+  func fetchAndStoreMetars(for station: String) async throws {
     let urlString = "https://aviationweather.gov/api/data/metar?ids=\(station)&format=xml&hours=1"
     guard let url = URL(string: urlString) else {
-      error = AviationDataServiceError.invalidURL
-      return
+      throw AviationDataServiceError.invalidURL
     }
     
-    do {
-      let (data, _) = try await URLSession.shared.data(from: url)
-      print(data)
-      let metars = try parser.parse(data: data)
-      try await backgroundContext.perform {
-        for data in metars {
-          guard data.stationID.uppercased() == station.uppercased() else { continue }
-          let airport = self.fetchOrCreateAirport(with: data.stationID, context: self.backgroundContext)
-          airport.lastUpdated = Date()
-          
-          let metar = self.fetchOrCreateMetar(with: data.observationTime, context: self.backgroundContext)
-          metar.rawText = data.rawText
-          metar.temperature = Float(data.temperature) ?? 0
-          metar.observationTime = data.observationTime
-          metar.wind = Float(data.wind) ?? 0
-          metar.airport = airport
-        }
-        if self.backgroundContext.hasChanges {
-          try self.backgroundContext.save()
-        } else {
-          throw AviationDataServiceError.noResultsFound(for: station)
-        }
+    let (data, _) = try await URLSession.shared.data(from: url)
+    print(data)
+    let metars = try parser.parse(data: data)
+    try await backgroundContext.perform {
+      for data in metars {
+        guard data.stationID.uppercased() == station.uppercased() else { continue }
+        let airport = self.fetchOrCreateAirport(with: data.stationID, context: self.backgroundContext)
+        airport.lastUpdated = Date()
+        
+        let metar = self.fetchOrCreateMetar(with: data.observationTime, context: self.backgroundContext)
+        metar.rawText = data.rawText
+        metar.temperature = Float(data.temperature) ?? 0
+        metar.observationTime = data.observationTime
+        metar.wind = Float(data.wind) ?? 0
+        metar.airport = airport
       }
-    } catch {
-      self.error = error
+      if self.backgroundContext.hasChanges {
+        try self.backgroundContext.save()
+      } else {
+        throw AviationDataServiceError.noResultsFound(for: station)
+      }
     }
-    isFetching = false
   }
   
   private func fetchOrCreateAirport(with id: String, context: NSManagedObjectContext) -> AirportEntity {
