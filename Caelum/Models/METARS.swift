@@ -14,20 +14,3 @@ struct Metar {
   let wind: String
   let rawText: String
 }
-
-// For use with api fetch
-struct MetarDTO {
-    let stationID: String
-    let observationTime: Date
-    let temperature: String
-    let wind: String
-    let rawText: String
-}
-
-
-//struct MetarData {
-//  let rawText: String
-//  let observationTime: Date
-//  let temperature: Float
-//  let wind: Float
-//}
