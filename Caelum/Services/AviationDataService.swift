@@ -85,7 +85,7 @@ final class AviationDataService: NSObject, ObservableObject {
 }
 
 // MARK: - Error handling
-enum AviationDataServiceError: Error, LocalizedError {
+enum AviationDataServiceError: Error, LocalizedError, Equatable {
   case noResultsFound(for: String)
   case invalidURL
   case networkFailure(Error)
@@ -104,6 +104,23 @@ enum AviationDataServiceError: Error, LocalizedError {
       return "Could not read weather data."
     case .emptyResponse:
       return "No data received from weather server."
+    }
+  }
+  
+  static func == (lhs: AviationDataServiceError, rhs: AviationDataServiceError) -> Bool {
+    switch (lhs, rhs) {
+    case (.noResultsFound(for: let a), .noResultsFound(for: let b)):
+      return a == b
+    case (.invalidURL, .invalidURL):
+      return true
+    case (.xmlParseFailure, .xmlParseFailure):
+      return true
+    case (.emptyResponse, .emptyResponse):
+      return true
+    case (.networkFailure(_), .networkFailure(_)):
+      return true
+    default:
+      return false
     }
   }
 }
