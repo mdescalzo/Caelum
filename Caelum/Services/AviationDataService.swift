@@ -18,7 +18,6 @@ final class AviationDataService: NSObject {
     self.backgroundContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
   }
   
-  @MainActor
   func fetchAndStoreMetars(for station: String) async throws {
     let urlString = "https://aviationweather.gov/api/data/metar?ids=\(station)&format=xml&hours=1"
     guard let url = URL(string: urlString) else {

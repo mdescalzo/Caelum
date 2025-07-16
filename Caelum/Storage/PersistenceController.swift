@@ -12,7 +12,7 @@ final class PersistenceController {
   
   let container: NSPersistentContainer
   
-  private init(inMemory: Bool = false) {
+  init(inMemory: Bool = false) {
     container = NSPersistentContainer(name: "LocalDataStore")
     
     if inMemory {

@@ -1,0 +1,11 @@
+<response>
+  <data num_results="1">
+    <METAR>
+      <raw_text>KMAN 121853Z AUTO 28008KT 10SM CLR 32/06 A2992 RMK AO2</raw_text>
+      <station_id>KMAN</station_id>
+      <observation_time>2024-07-12T18:53:00Z
+      <temp_c>32.0</temp_c>
+      <wind_dir_degrees>280</wind_dir_degrees>
+    </METAR>
+  </data>
+</response>

@@ -29,6 +29,26 @@
 		7DD2E0462E21772C00F5C0D9 /* CaelumUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CaelumUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7DDAA9972E282EF600EB83F4 /* Exceptions for "CaelumTests" folder in "CaelumTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				TestMetarsMalformed.xml,
+			);
+			target = 7DD2E03B2E21772C00F5C0D9 /* CaelumTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		7DDAA9982E282EF600EB83F4 /* Exceptions for "CaelumTests" folder in "Compile Sources" phase from "CaelumTests" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 7DD2E0382E21772C00F5C0D9 /* Sources */;
+			membershipExceptions = (
+				TestMetarsMalformed.xml,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7DD2E0312E21772A00F5C0D9 /* Caelum */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -37,6 +57,10 @@
 		};
 		7DD2E03F2E21772C00F5C0D9 /* CaelumTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7DDAA9972E282EF600EB83F4 /* Exceptions for "CaelumTests" folder in "CaelumTests" target */,
+				7DDAA9982E282EF600EB83F4 /* Exceptions for "CaelumTests" folder in "Compile Sources" phase from "CaelumTests" target */,
+			);
 			path = CaelumTests;
 			sourceTree = "<group>";
 		};

@@ -1,0 +1,18 @@
+<response>
+  <data num_results="2">
+    <METAR>
+      <raw_text>KMAN 121853Z AUTO 28008KT 10SM CLR 32/06 A2992 RMK AO2</raw_text>
+      <station_id>KMAN</station_id>
+      <observation_time>2024-07-12T18:53:00Z</observation_time>
+      <temp_c>32.0</temp_c>
+      <wind_dir_degrees>280</wind_dir_degrees>
+    </METAR>
+    <METAR>
+      <raw_text>KBOI 121856Z 33004KT 10SM CLR 35/07 A2991 RMK AO2 SLP120 T03500072</raw_text>
+      <station_id>KBOI</station_id>
+      <observation_time>2024-07-12T18:56:00Z</observation_time>
+      <temp_c>35.0</temp_c>
+      <wind_dir_degrees>330</wind_dir_degrees>
+    </METAR>
+  </data>
+</response>
