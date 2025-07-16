@@ -34,32 +34,37 @@ final class PersistenceController {
     return context
   }
   
-  func deleteAllAirports(in context: NSManagedObjectContext) {
-    let fetchRequest: NSFetchRequest<NSFetchRequestResult> = AirportEntity.fetchRequest()
+  func deleteAllAirports(in context: NSManagedObjectContext) async throws {
+    let backgroundContext = newBackgroundContext()
     
-    do {
-      if let airports = try context.fetch(fetchRequest) as? [AirportEntity] {
-        print("Deleting \(airports.count) airports.")
-        airports.forEach { context.delete($0) }
-        try context.save()
+    try await backgroundContext.perform {
+      let fetchRequest: NSFetchRequest<NSFetchRequestResult> = AirportEntity.fetchRequest()
+      let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+      deleteRequest.resultType = .resultTypeObjectIDs
+      
+      let result = try backgroundContext.execute(deleteRequest) as? NSBatchDeleteResult
+      if let objectIDs = result?.result as? [NSManagedObjectID] {
+        let changes: [AnyHashable: Any] = [NSDeletedObjectsKey: objectIDs]
+        NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self.container.viewContext])
+        print("✅ Deleted \(objectIDs.count) airports")
       }
-    } catch {
-      print("❌ Failed to delete all airports: \(error)")
     }
   }
   
-  func deleteAllMetars(in context: NSManagedObjectContext) {
-    let fetchRequest: NSFetchRequest<NSFetchRequestResult> = MetarEntity.fetchRequest()
+  func deleteAllMetars(in context: NSManagedObjectContext) async throws {
+    let backgroundContext = newBackgroundContext()
     
-    do {
-      if let metars = try context.fetch(fetchRequest) as? [MetarEntity] {
-        print("Deleting \(metars.count) metars.")
-        metars.forEach { context.delete($0) }
-        try context.save()
+    try await backgroundContext.perform {
+      let fetchRequest: NSFetchRequest<NSFetchRequestResult> = MetarEntity.fetchRequest()
+      let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+      deleteRequest.resultType = .resultTypeObjectIDs
+      
+      let result = try backgroundContext.execute(deleteRequest) as? NSBatchDeleteResult
+      if let objectIDs = result?.result as? [NSManagedObjectID] {
+        let changes: [AnyHashable: Any] = [NSDeletedObjectsKey: objectIDs]
+        NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [self.container.viewContext])
+        print("✅ Deleted \(objectIDs.count) METARs")
       }
-    } catch {
-      print("❌ Failed to delete all metars: \(error)")
     }
   }
-   
 }
